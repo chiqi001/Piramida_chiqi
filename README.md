@@ -1,10 +1,10 @@
 # SMI Bot – spółki z WIG → Telegram
 
-Bot działa na GitHub Actions. Co 5 minut w czasie sesji GPW (pon–pt) sprawdza wszystkie polskie spółki z indeksu WIG i liczy SMI (Length 14, R 5, Smooth K 3, wzory jak w strategii Pine) na zamkniętych świecach M5, M30 i H1. Dane pochodzą z TradingView (bez logowania).
+Bot działa na GitHub Actions. Codziennie po zamknięciu sesji GPW (pon–pt, ok. 17:20 zimą i 18:20 latem) sprawdza wszystkie polskie spółki z indeksu WIG i liczy SMI (Length 14, R 5, Smooth K 3, wzory jak w strategii Pine) na zamkniętych świecach **D1**. Dane pochodzą z TradingView (bez logowania).
 
 | Sygnał | Warunek |
 |---|---|
-| 🟢 LONG | SMI < **-70** jednocześnie na M5, M30 i H1 |
+| 🟢 LONG | SMI < **-70** na D1 (pierwsza świeca dzienna w strefie) |
 | 🔴 SHORT | domyślnie wyłączony (zmienna `SHORT_ENABLED=true`, próg `SHORT_LEVEL`) |
 
 Po sygnale ta sama spółka nie da kolejnego, dopóki SMI na którymkolwiek interwale nie wyjdzie ze strefy o co najmniej `REARM_MARGIN` (5 pkt). Jeśli kilka spółek da sygnał naraz, przychodzi jedna zbiorcza wiadomość.
@@ -29,10 +29,11 @@ Po sygnale ta sama spółka nie da kolejnego, dopóki SMI na którymkolwiek inte
   - `SHORT_ENABLED` (false),
   - `SHORT_LEVEL` (75),
   - `REARM_MARGIN` (5),
-  - `SYMBOLS`: własna lista zamiast WIG, np. `GPW:PKO,GPW:CDR`.
+  - `SYMBOLS`: własna lista zamiast WIG, np. `GPW:PKO,GPW:CDR`,
+  - `TIMEFRAMES`: domyślnie `D1`, można np. `M5,M30,H1`; przy interwałach intraday trzeba też zmienić harmonogram w workflow.
 
 ## Warto wiedzieć
 
-- **Nieoficjalny interfejs.** Dane pobierane są przez nieoficjalne połączenie TradingView. Bez logowania notowania GPW mogą być opóźnione, zwykle o 15 minut.
-- **M30 i H1 z M5.** Świece M30 i H1 są składane ze świec M5, więc jedno zapytanie przypada na spółkę. Wartości mogą minimalnie różnić się od wykresu TradingView.
+- **Nieoficjalny interfejs.** Dane pobierane są przez nieoficjalne połączenie TradingView. Przy D1 opóźnienie notowań nie ma znaczenia, bo bot sprawdza zamkniętą sesję.
+- **Shoper i MOJ.** Tych spółek nie udało się dopasować do symbolu TradingView, więc są pominięte.
 - **Repozytorium publiczne.** Repo musi być publiczne, żeby minuty Actions były darmowe. Keepalive co 40 dni chroni przed automatycznym wyłączeniem harmonogramu.

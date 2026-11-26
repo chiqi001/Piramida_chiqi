@@ -3,9 +3,10 @@
 SMI bot dla spółek z indeksu WIG (GPW) -> Telegram.
 
 Liczy Stochastic Momentum Index (wzory jak strategia Pine
-"SMI Strategy – surjithctly version") na M5, M30 i H1 i wysyła sygnał, gdy:
-  * LONG  – SMI < LONG_LEVEL (domyślnie -70) jednocześnie na M5, M30 i H1
-  * SHORT – (domyślnie WYŁĄCZONY) SMI > SHORT_LEVEL na M5, M30 i H1
+"SMI Strategy – surjithctly version") na interwałach z TIMEFRAMES (domyślnie D1)
+i wysyła sygnał po zamknięciu świecy, gdy:
+  * LONG  – SMI < LONG_LEVEL (domyślnie -70) na wszystkich interwałach
+  * SHORT – (domyślnie WYŁĄCZONY) SMI > SHORT_LEVEL
 
 Dane: TradingView (bez logowania). Pobierane są tylko świece M5; M30 i H1
 składane są z M5 – jedno zapytanie na spółkę. Liczone są tylko zamknięte świece.
@@ -56,14 +57,21 @@ TZ = env_str("DISPLAY_TZ", "Europe/Warsaw")
 SESSION_LAST_MINUTE = env_str("SESSION_LAST_MINUTE", "16:59")  # pusty = brak sesji (24h)
 M5_BARS = env_num("M5_BARS", 1500, int)
 WORKERS = env_num("WORKERS", 4, int)
-MAX_SIGNAL_AGE_MIN = env_num("MAX_SIGNAL_AGE_MIN", 30, int)
+MAX_SIGNAL_AGE_MIN = env_num("MAX_SIGNAL_AGE_MIN", 0, int)  # 0 = automatycznie
 
 SEND_TEST = env_str("SEND_TEST", "false").lower() == "true"
 REPLAY_DAY = env_str("REPLAY_DAY", "")
 STATE_FILE = Path(env_str("STATE_FILE", "state.json"))
 SYMBOLS_FILE = Path(env_str("SYMBOLS_FILE", "wig_symbols.csv"))
 
-TFS = [("M5", 5), ("M30", 30), ("H1", 60)]
+TF_MINUTES = {"M5": 5, "M30": 30, "H1": 60, "D1": 1440}
+TFS = sorted(((tf, TF_MINUTES[tf]) for tf in
+              (x.strip().upper() for x in env_str("TIMEFRAMES", "D1").split(",")) if tf),
+             key=lambda x: x[1])
+BASE_TF = TFS[0][0]                       # najkrótszy interwał = rytm sprawdzania
+TF_LABEL = ", ".join(tf for tf, _ in TFS)
+SESSION_CLOSE = env_str("SESSION_CLOSE", "17:05")  # koniec sesji GPW (zamknięcie świecy D1)
+D1_BARS = env_num("D1_BARS", 300, int)
 MIN_BARS = 40
 
 
@@ -143,11 +151,11 @@ def drop_open_bar(df: pd.DataFrame, minutes: int) -> pd.DataFrame:
     return df
 
 
-def fetch_m5(tv_symbol: str) -> pd.DataFrame:
+def fetch_tv(tv_symbol: str, interval: str, n_bars: int) -> pd.DataFrame:
     last = None
     for attempt in range(5):
         try:
-            df = tv_feed.get_bars(tv_symbol, 5, n_bars=M5_BARS, timeout=40)
+            df = tv_feed.get_bars(tv_symbol, interval, n_bars=n_bars, timeout=40)
             return df.dropna(subset=["High", "Low", "Close"])
         except Exception as e:  # noqa: BLE001
             last = e
@@ -159,21 +167,41 @@ def fetch_m5(tv_symbol: str) -> pd.DataFrame:
     raise RuntimeError("429 Too Many Requests" if "429" in msg else msg[:200])
 
 
+def daily_closed(df: pd.DataFrame) -> pd.DataFrame:
+    """Świece D1: indeks = czas zamknięcia sesji (data lokalna + SESSION_CLOSE); bez bieżącej sesji."""
+    hh, mm = map(int, SESSION_CLOSE.split(":"))
+    days = df.index.tz_convert(TZ).normalize()
+    close = (days + pd.Timedelta(hours=hh, minutes=mm)).tz_convert("UTC")
+    out = df.copy()
+    out["open_time"] = days.tz_convert("UTC")
+    out.index = close
+    return out[out.index <= pd.Timestamp.now(tz="UTC")]
+
+
 def history_table(tv_symbol: str) -> pd.DataFrame:
-    """Dla każdej zamkniętej świecy M5: SMI z M5 i ostatnich ZAMKNIĘTYCH świec M30 i H1."""
-    df5 = fetch_m5(tv_symbol)
+    """Dla każdej zamkniętej świecy najkrótszego interwału: SMI z niej i z ostatnich
+    ZAMKNIĘTYCH świec dłuższych interwałów."""
+    df5 = None
     base = None
     for name, minutes in TFS:
-        df = df5 if minutes == 5 else resample(df5, minutes)
-        df = drop_open_bar(df, minutes)
+        if name == "D1":
+            df = daily_closed(fetch_tv(tv_symbol, "1D", D1_BARS))
+            open_times = df.pop("open_time")
+        else:
+            if df5 is None:
+                df5 = fetch_tv(tv_symbol, "5", M5_BARS)
+            df = df5 if minutes == 5 else resample(df5, minutes)
+            df = drop_open_bar(df, minutes)
+            open_times = pd.Series(df.index, index=df.index)
+            df.index = df.index + pd.Timedelta(minutes=minutes)  # czas zamknięcia
+            open_times.index = df.index
         if len(df) < MIN_BARS:
             raise RuntimeError(f"za mało świec {name}: {len(df)}")
         part = pd.DataFrame({name: compute_smi(df), f"{name}_close": df["Close"],
-                             f"{name}_open": df.index})
-        part.index = part.index + pd.Timedelta(minutes=minutes)  # czas zamknięcia
+                             f"{name}_open": open_times})
         part = part.dropna().reset_index(names="t").sort_values("t")
         part["t"] = part["t"].astype("datetime64[ns, UTC]")
-        part[f"{name}_open"] = part[f"{name}_open"].astype("datetime64[ns, UTC]")
+        part[f"{name}_open"] = pd.to_datetime(part[f"{name}_open"], utc=True).astype("datetime64[ns, UTC]")
         base = part if base is None else pd.merge_asof(base, part, on="t", direction="backward")
     return base.dropna().reset_index(drop=True)
 
@@ -195,9 +223,13 @@ def step(armed: dict, smis: list) -> list:
     return out
 
 
+def row_smis(row) -> list:
+    return [getattr(row, tf) for tf, _ in TFS]
+
+
 def row_info(name: str, row) -> dict:
-    return {"name": name, "M5": row.M5, "M30": row.M30, "H1": row.H1,
-            "price": row.M5_close, "time": row.M5_open}
+    return {"name": name, "smi": {tf: getattr(row, tf) for tf, _ in TFS},
+            "price": getattr(row, f"{BASE_TF}_close"), "time": getattr(row, f"{BASE_TF}_open")}
 
 
 # ---------------------------------------------------------------- telegram
@@ -221,16 +253,16 @@ def fmt_price(p: float) -> str:
     return f"{p:,.2f}".replace(",", " ") if p >= 10 else f"{p:.3f}"
 
 
-def fmt_line(s: dict, with_date: bool = False) -> str:
-    t = s["time"].tz_convert(TZ).strftime("%d.%m %H:%M" if with_date else "%H:%M")  # start świecy M5
-    return (f"{s['name']} | {fmt_price(s['price'])} zł | {t}\n"
-            f"   M5 {s['M5']:.1f} · M30 {s['M30']:.1f} · H1 {s['H1']:.1f}")
+def fmt_line(s: dict) -> str:
+    t = s["time"].tz_convert(TZ).strftime("%d.%m.%Y" if BASE_TF == "D1" else "%d.%m %H:%M")
+    smi = " · ".join(f"{tf} {v:.1f}" for tf, v in s["smi"].items())
+    return f"{s['name']} | {fmt_price(s['price'])} zł | {t}\n   SMI {smi}"
 
 
 def header(kind: str) -> str:
     if kind == "LONG":
-        return f"🟢 LONG – SMI < {LONG_LEVEL:g} na M5, M30 i H1"
-    return f"🔴 SHORT – SMI > {SHORT_LEVEL:g} na M5, M30 i H1"
+        return f"🟢 LONG – SMI < {LONG_LEVEL:g} ({TF_LABEL})"
+    return f"🔴 SHORT – SMI > {SHORT_LEVEL:g} ({TF_LABEL})"
 
 
 def send_chunks(title: str, lines: list) -> bool:
@@ -282,7 +314,7 @@ def load_all(symbols: list) -> dict:
     if tables:
         newest = max(t["t"].iloc[-1] for t in tables.values() if not t.empty)
         lag = (pd.Timestamp.now(tz="UTC") - newest).total_seconds() / 60
-        print(f"Najnowsza zamknięta świeca M5: {newest.tz_convert(TZ):%Y-%m-%d %H:%M} "
+        print(f"Najnowsza zamknięta świeca {BASE_TF}: {newest.tz_convert(TZ):%Y-%m-%d %H:%M} "
               f"(opóźnienie danych ok. {lag:.0f} min)")
     for e in errors[:30]:
         print("  BŁĄD", e)
@@ -298,16 +330,22 @@ def run_live(symbols: list) -> int:
     state = load_state()
     before = json.dumps(state, sort_keys=True)
     now = pd.Timestamp.now(tz="UTC")
+    max_age = MAX_SIGNAL_AGE_MIN or (23 * 60 if BASE_TF == "D1" else 30)
     new = {"LONG": [], "SHORT": []}
 
     for name, table in tables.items():
         if table.empty:
             continue
         row = table.iloc[-1]
-        armed = state.setdefault(name, {})
-        fresh = (now - row["t"]) <= pd.Timedelta(minutes=MAX_SIGNAL_AGE_MIN)
-        smis = [row.M5, row.M30, row.H1]
-        for kind in step(armed, smis):
+        if name not in state:  # pierwszy raz: odtwórz stan z historii, bez starych sygnałów
+            init = {}
+            for r in table.iloc[:-1].itertuples(index=False):
+                for k in step(init, row_smis(r)):
+                    init["long" if k == "LONG" else "short"] = False
+            state[name] = init
+        armed = state[name]
+        fresh = (now - row["t"]) <= pd.Timedelta(minutes=max_age)
+        for kind in step(armed, [row[tf] for tf, _ in TFS]):
             if fresh:
                 new[kind].append((name, row_info(name, row)))
 
@@ -324,6 +362,7 @@ def run_live(symbols: list) -> int:
                 st = state[name]
                 st["long" if kind == "LONG" else "short"] = False
                 st[f"last_{kind.lower()}"] = s["time"].tz_convert(TZ).strftime("%Y-%m-%d %H:%M")
+                st["tf"] = TF_LABEL
     print(f"Nowe sygnały: LONG {len(new['LONG'])}, SHORT {len(new['SHORT'])}")
 
     if json.dumps(state, sort_keys=True) != before:
@@ -337,8 +376,8 @@ def run_replay(symbols: list, day_text: str) -> int:
         return 1
     if day_text.lower() in ("wczoraj", "yesterday", "ostatnia"):
         today = pd.Timestamp.now(tz=TZ).normalize()
-        days = sorted({d for t in tables.values() for d in t["M5_open"].dt.tz_convert(TZ).dt.normalize()
-                       if d < today})
+        days = sorted({d for t in tables.values()
+                       for d in t[f"{BASE_TF}_open"].dt.tz_convert(TZ).dt.normalize() if d < today})
         day = days[-1] if days else today - pd.Timedelta(days=1)
     else:
         day = pd.Timestamp(day_text).tz_localize(TZ)
@@ -348,17 +387,17 @@ def run_replay(symbols: list, day_text: str) -> int:
     for name, table in tables.items():
         armed = {}
         for row in table.itertuples(index=False):
-            kinds = step(armed, [row.M5, row.M30, row.H1])
+            kinds = step(armed, row_smis(row))
             for kind in kinds:
                 armed["long" if kind == "LONG" else "short"] = False
-                if row.M5_open.tz_convert(TZ).normalize() == day:
+                if getattr(row, f"{BASE_TF}_open").tz_convert(TZ).normalize() == day:
                     events[kind].append(row_info(name, row))
 
     total = sum(len(v) for v in events.values())
     print(f"Sygnałów w dniu {day.date()}: {total}")
     title_prefix = f"📜 TEST – sygnały z {day.strftime('%d.%m.%Y')} (historyczne, nie aktualne)\n"
     if total == 0:
-        send_telegram(title_prefix + f"Brak sygnałów (SMI < {LONG_LEVEL:g} na M5, M30 i H1) "
+        send_telegram(title_prefix + f"Brak sygnałów (SMI < {LONG_LEVEL:g}, {TF_LABEL}) "
                                      f"wśród {len(tables)} spółek.")
         return 0
     try:
@@ -375,13 +414,13 @@ def run_replay(symbols: list, day_text: str) -> int:
 
 def main() -> int:
     symbols = load_symbols()
-    print(f"Spółek: {len(symbols)} | LONG < {LONG_LEVEL:g}"
+    print(f"Spółek: {len(symbols)} | interwały: {TF_LABEL} | LONG < {LONG_LEVEL:g}"
           + (f" | SHORT > {SHORT_LEVEL:g}" if SHORT_ENABLED else " | SHORT wyłączony"))
     if REPLAY_DAY:
         return run_replay(symbols, REPLAY_DAY)
     if SEND_TEST:
         ok = send_telegram(f"🧪 TEST – bot SMI działa. Monitoruję {len(symbols)} spółek z WIG "
-                           f"(sygnał: SMI < {LONG_LEVEL:g} jednocześnie na M5, M30 i H1).")
+                           f"(sygnał: SMI < {LONG_LEVEL:g} na {TF_LABEL}, po zamknięciu świecy).")
         return 0 if ok else 1
     return run_live(symbols)
 
