@@ -1,0 +1,829 @@
+{
+ "06MAGNA (06N)": {
+  "long": true
+ },
+ "11BIT (11B)": {
+  "long": false
+ },
+ "3RGAMES (3RG)": {
+  "long": true
+ },
+ "4MASS (4MS)": {},
+ "ABPL (ABE)": {
+  "long": false
+ },
+ "ACAUTOGAZ (ACG)": {
+  "long": true
+ },
+ "ACTION (ACT)": {},
+ "AGORA (AGO)": {
+  "long": true
+ },
+ "AGROTON (AGT)": {},
+ "AILLERON (ALL)": {
+  "long": true
+ },
+ "AIRWAY (AWM)": {
+  "long": true
+ },
+ "ALIOR (ALR)": {
+  "long": true
+ },
+ "ALLEGRO (ALE)": {
+  "long": true
+ },
+ "ALTA (AAT)": {
+  "long": true
+ },
+ "ALTUS (ALI)": {},
+ "AMBRA (AMB)": {
+  "long": true
+ },
+ "AMICA (AMC)": {
+  "long": true
+ },
+ "AMREST (EAT)": {
+  "long": false
+ },
+ "ANSWEAR (ANR)": {
+  "long": true
+ },
+ "APATOR (APT)": {},
+ "APLISENS (APN)": {
+  "long": true
+ },
+ "APSENERGY (APE)": {
+  "last_long": "2026-11-26 00:00",
+  "long": false,
+  "tf": "D1"
+ },
+ "ARCHICOM (ARH)": {},
+ "ARCTIC (ATC)": {
+  "long": true
+ },
+ "ARLEN (ARL)": {
+  "long": true
+ },
+ "ARTIFEX (ART)": {
+  "long": true
+ },
+ "ASBIS (ASB)": {},
+ "ASMGROUP (ASM)": {
+  "long": false
+ },
+ "ASSECOBS (ABS)": {},
+ "ASSECOPOL (ACP)": {
+  "long": true
+ },
+ "ASSECOSEE (ASE)": {
+  "long": true
+ },
+ "ASTARTA (AST)": {
+  "long": true
+ },
+ "ATAL (1AT)": {
+  "long": true
+ },
+ "ATENDE (ATD)": {
+  "long": true
+ },
+ "ATLANTAPL (ATP)": {
+  "long": false
+ },
+ "ATMGRUPA (ATG)": {
+  "long": true
+ },
+ "ATREM (ATR)": {
+  "long": false
+ },
+ "AUTOPARTN (APR)": {},
+ "BBIDEV (BBD)": {
+  "long": true
+ },
+ "BENEFIT (BFT)": {},
+ "BETACOM (BCM)": {
+  "long": true
+ },
+ "BIGCHEESE (BCS)": {
+  "long": true
+ },
+ "BIOCELTIX (BCX)": {},
+ "BIOMAXIMA (BMX)": {
+  "long": false
+ },
+ "BIOPLANET (BIP)": {
+  "long": true
+ },
+ "BIOTON (BIO)": {
+  "long": true
+ },
+ "BLOOBER (BLO)": {
+  "long": false
+ },
+ "BNPPPL (BNP)": {},
+ "BOGDANKA (LWB)": {
+  "long": true
+ },
+ "BOOMBIT (BBT)": {
+  "long": true
+ },
+ "BORYSZEW (BRS)": {
+  "long": true
+ },
+ "BOS (BOS)": {
+  "long": true
+ },
+ "BOWIM (BOW)": {
+  "long": true
+ },
+ "BUDIMEX (BDX)": {
+  "long": true
+ },
+ "BUMECH (BMC)": {
+  "long": false
+ },
+ "CAPITAL (BDF)": {
+  "long": false
+ },
+ "CAPITEA (CAP)": {
+  "long": true
+ },
+ "CAPTORTX (CTX)": {
+  "long": true
+ },
+ "CASPAR (CSR)": {
+  "long": true
+ },
+ "CAVATINA (CAV)": {
+  "long": true
+ },
+ "CDPROJEKT (CDR)": {
+  "long": true
+ },
+ "CDRL (CDL)": {
+  "last_long": "2026-11-26 00:00",
+  "long": false,
+  "tf": "D1"
+ },
+ "CELTIC (CPD)": {
+  "long": true
+ },
+ "CIGAMES (CIG)": {
+  "long": true
+ },
+ "CLNPHARMA (CLN)": {
+  "long": false
+ },
+ "CLOUD (CLD)": {
+  "long": true
+ },
+ "COALENERG (CLE)": {
+  "long": false
+ },
+ "COGNOR (COG)": {
+  "long": false
+ },
+ "COLUMBUS (CLC)": {
+  "long": false
+ },
+ "COMP (CMP)": {},
+ "COMPERIA (CPL)": {
+  "long": true
+ },
+ "COMPREMUM (CPR)": {},
+ "CORMAY (CRM)": {},
+ "CREEPYJAR (CRJ)": {
+  "long": true
+ },
+ "CREOTECH (CRI)": {
+  "long": false
+ },
+ "CRQUANTUM (CRQ)": {
+  "long": false
+ },
+ "CYBERFLKS (CBF)": {},
+ "CYFRPLSAT (CPS)": {
+  "long": true
+ },
+ "DADELO (DAD)": {},
+ "DATAWALK (DAT)": {
+  "long": true
+ },
+ "DBENERGY (DBE)": {
+  "long": true
+ },
+ "DECORA (DCR)": {
+  "long": false
+ },
+ "DEKPOL (DEK)": {},
+ "DELKO (DEL)": {
+  "long": true
+ },
+ "DEVELIA (DVL)": {
+  "long": true
+ },
+ "DGA (DGA)": {
+  "long": true
+ },
+ "DIAG (DIA)": {
+  "long": true
+ },
+ "DIGITANET (DIG)": {
+  "long": true
+ },
+ "DIGITREE (DTR)": {},
+ "DINOPL (DNP)": {
+  "long": true
+ },
+ "DOMDEV (DOM)": {
+  "long": true
+ },
+ "DRAGOENT (DGE)": {
+  "long": true
+ },
+ "ECBSA (ECB)": {
+  "long": true
+ },
+ "ECHO (ECH)": {
+  "long": true
+ },
+ "ELEKTROTI (ELT)": {
+  "long": true
+ },
+ "ELKOP (EKP)": {},
+ "ENEA (ENA)": {
+  "long": true
+ },
+ "ENELMED (ENE)": {},
+ "ENERGOINS (ENI)": {
+  "long": true
+ },
+ "ENTER (ENT)": {
+  "long": true
+ },
+ "EQUNICO (EQU)": {},
+ "ERBUD (ERB)": {
+  "long": true
+ },
+ "ERG (ERG)": {
+  "long": true
+ },
+ "ERSTEPL (EBP)": {},
+ "ESOTIQ (EAH)": {
+  "long": true
+ },
+ "EUROCASH (EUR)": {
+  "long": true
+ },
+ "EUROTEL (ETL)": {
+  "long": true
+ },
+ "FABRITY (FAB)": {
+  "long": true
+ },
+ "FASING (FSG)": {},
+ "FEERUM (FEE)": {
+  "long": true
+ },
+ "FERRO (FRO)": {
+  "long": true
+ },
+ "FON (FON)": {
+  "long": true
+ },
+ "FOODHUB (FHB)": {},
+ "FORTE (FTE)": {
+  "long": false
+ },
+ "GAMEOPS (GOP)": {
+  "long": true
+ },
+ "GAMFACTOR (GIF)": {
+  "long": true
+ },
+ "GENOMTEC (GMT)": {
+  "long": true
+ },
+ "GETIN (GTN)": {
+  "last_long": "2026-11-26 00:00",
+  "long": false,
+  "tf": "D1"
+ },
+ "GPW (GPW)": {
+  "long": true
+ },
+ "GREENX (GRX)": {
+  "long": false
+ },
+ "GRODNO (GRN)": {
+  "long": true
+ },
+ "GRUPAAZOTY (ATT)": {
+  "long": false
+ },
+ "GRUPRACUJ (GPP)": {
+  "long": true
+ },
+ "GTC (GTC)": {
+  "long": true
+ },
+ "HANDLOWY (BHW)": {},
+ "HARPER (HRP)": {
+  "long": true
+ },
+ "HELIO (HEL)": {
+  "long": false
+ },
+ "HERKULES (HRS)": {
+  "long": true
+ },
+ "HUUUGE (HUG)": {},
+ "HYDROTOR (HDR)": {
+  "long": true
+ },
+ "IFIRMA (IFI)": {
+  "long": true
+ },
+ "IMCOMPANY (IMC)": {
+  "long": true
+ },
+ "IMMOBILE (GKI)": {},
+ "IMPERIO (IMP)": {
+  "long": true
+ },
+ "IMS (IMS)": {
+  "long": true
+ },
+ "INC (INC)": {
+  "long": true
+ },
+ "INGBSK (ING)": {
+  "long": true
+ },
+ "INPRO (INP)": {
+  "long": true
+ },
+ "INSTALKRK (INK)": {
+  "long": true
+ },
+ "INTERBUD (ITB)": {
+  "long": true
+ },
+ "INTERCARS (CAR)": {},
+ "INTROL (INL)": {},
+ "IPOPEMA (IPE)": {},
+ "IZOLACJA (IZO)": {},
+ "IZOSTAL (IZS)": {},
+ "JRH (JRH)": {
+  "long": true
+ },
+ "JSW (JSW)": {
+  "long": false
+ },
+ "KCI (KCI)": {},
+ "KETY (KTY)": {
+  "long": true
+ },
+ "KGHM (KGH)": {
+  "long": false
+ },
+ "KINOPOL (KPL)": {
+  "long": true
+ },
+ "KOGENERA (KGN)": {
+  "long": true
+ },
+ "KOMPAP (KMP)": {
+  "long": true
+ },
+ "KOMPUTRON (KOM)": {
+  "long": true
+ },
+ "KRUK (KRU)": {
+  "long": true
+ },
+ "KSGAGRO (KSG)": {
+  "long": true
+ },
+ "LARQ (LRQ)": {
+  "long": true
+ },
+ "LENA (LEN)": {
+  "long": false
+ },
+ "LENTEX (LTX)": {
+  "long": true
+ },
+ "LIBET (LBT)": {},
+ "LOKUM (LKD)": {},
+ "LPP (LPP)": {
+  "long": true
+ },
+ "LSISOFT (LSI)": {
+  "long": true
+ },
+ "LUBAWA (LBW)": {
+  "last_long": "2026-11-26 00:00",
+  "long": false,
+  "tf": "D1"
+ },
+ "MABION (MAB)": {
+  "long": true
+ },
+ "MAKARONPL (MAK)": {
+  "long": false
+ },
+ "MANGATA (MGT)": {
+  "long": true
+ },
+ "MARVIPOL (MVP)": {
+  "long": true
+ },
+ "MAXCOM (MXC)": {
+  "long": true
+ },
+ "MBANK (MBK)": {},
+ "MCI (MCI)": {
+  "long": true
+ },
+ "MCR (MCR)": {
+  "long": true
+ },
+ "MDIENERGIA (MDI)": {
+  "long": true
+ },
+ "MEDICALG (MDG)": {
+  "long": false
+ },
+ "MEDINICE (ICE)": {
+  "long": false
+ },
+ "MENNICA (MNC)": {
+  "long": true
+ },
+ "MERCATOR (MRC)": {
+  "long": true
+ },
+ "MEXPOLSKA (MEX)": {},
+ "MFO (MFO)": {
+  "long": false
+ },
+ "MILKILAND (MLK)": {
+  "long": true
+ },
+ "MILLENNIUM (MIL)": {},
+ "MIRACULUM (MIR)": {},
+ "MIRBUD (MRB)": {
+  "long": true
+ },
+ "MLPGROUP (MLG)": {
+  "long": false
+ },
+ "MLSYSTEM (MLS)": {
+  "long": false
+ },
+ "MOBRUK (MBR)": {},
+ "MODIVO (MDV)": {
+  "long": true
+ },
+ "MOLECURE (MOC)": {
+  "long": true
+ },
+ "MONNARI (MON)": {
+  "long": true
+ },
+ "MOSTALPLC (MSP)": {
+  "long": true
+ },
+ "MOSTALWAR (MSW)": {
+  "long": false
+ },
+ "MOSTALZAB (MSZ)": {
+  "last_long": "2026-11-26 00:00",
+  "long": false,
+  "tf": "D1"
+ },
+ "MOVIEGAMES (MOV)": {},
+ "MURAPOL (MUR)": {
+  "long": true
+ },
+ "MUZA (MZA)": {
+  "long": true
+ },
+ "NANOGROUP (NNG)": {
+  "long": true
+ },
+ "NEUCA (NEU)": {},
+ "NEWAG (NWG)": {
+  "long": true
+ },
+ "NIEWIADOW (GNS)": {
+  "long": true
+ },
+ "NOCTILUCA (NCL)": {
+  "long": true
+ },
+ "NOVAVISGR (NVG)": {
+  "long": true
+ },
+ "NTCAPITAL (NTC)": {},
+ "NTTSYSTEM (NTT)": {},
+ "ODLEWNIE (ODL)": {
+  "long": false
+ },
+ "ONDE (OND)": {},
+ "ONEMORE (OML)": {
+  "long": true
+ },
+ "ONESANO (ONO)": {
+  "long": false
+ },
+ "OPONEO.PL (OPN)": {
+  "long": true
+ },
+ "OPTEAM (OPM)": {
+  "long": true
+ },
+ "ORANGEPL (OPL)": {
+  "long": true
+ },
+ "OTLOG (OTS)": {
+  "long": true
+ },
+ "OTMUCHOW (OTM)": {
+  "long": true
+ },
+ "PANOVA (NVA)": {
+  "long": true
+ },
+ "PASSUS (PAS)": {
+  "long": true
+ },
+ "PATENTUS (PAT)": {
+  "long": true
+ },
+ "PCCROKITA (PCR)": {
+  "long": false
+ },
+ "PCFGROUP (PCF)": {
+  "long": true
+ },
+ "PEKABEX (PBX)": {
+  "long": true
+ },
+ "PEKAO (PEO)": {},
+ "PEP (PEP)": {},
+ "PEPCO (PCO)": {},
+ "PEPEES (PPS)": {},
+ "PGE (PGE)": {
+  "long": true
+ },
+ "PHARMENA (PHR)": {
+  "long": true
+ },
+ "PHN (PHN)": {
+  "long": false
+ },
+ "PHOTON (PEN)": {
+  "long": true
+ },
+ "PJPMAKRUM (PJP)": {},
+ "PKNORLEN (PKN)": {
+  "long": false
+ },
+ "PKOBP (PKO)": {},
+ "PLAYWAY (PLW)": {
+  "long": true
+ },
+ "PLAZACNTR (PLZ)": {
+  "long": true
+ },
+ "PMPG (PGM)": {
+  "long": true
+ },
+ "POLICE (PCE)": {
+  "long": true
+ },
+ "POLIMEXMS (PXM)": {
+  "long": true
+ },
+ "POLTREG (PTG)": {
+  "long": false
+ },
+ "POLWAX (PWX)": {
+  "long": true
+ },
+ "PRAGMAINK (PRI)": {},
+ "PROCHEM (PRM)": {},
+ "PROTEKTOR (PRT)": {
+  "long": true
+ },
+ "PTWP (PTW)": {
+  "long": true
+ },
+ "PURE (MQR)": {
+  "long": false
+ },
+ "PZU (PZU)": {},
+ "QNATECHNO (QNA)": {
+  "long": false
+ },
+ "QUERCUS (QRS)": {},
+ "RAINBOW (RBW)": {
+  "long": true
+ },
+ "RANKPROGR (RNK)": {
+  "long": true
+ },
+ "RAWLPLUG (RWL)": {
+  "long": true
+ },
+ "REINO (RNC)": {
+  "long": true
+ },
+ "RELPOL (RLP)": {
+  "long": true
+ },
+ "REMAK (RMK)": {
+  "long": true
+ },
+ "RENDER (RND)": {
+  "long": true
+ },
+ "ROPCZYCE (RPC)": {
+  "long": true
+ },
+ "RYVU (RVU)": {
+  "long": true
+ },
+ "SANOK (SNK)": {
+  "long": false
+ },
+ "SANWIL (SNW)": {
+  "long": true
+ },
+ "SCANWAY (SCW)": {
+  "long": true
+ },
+ "SCPFL (SCP)": {
+  "long": true
+ },
+ "SECOGROUP (SWG)": {},
+ "SEKO (SEK)": {
+  "long": true
+ },
+ "SELENAFM (SEL)": {
+  "long": true
+ },
+ "SELVITA (SLV)": {
+  "long": true
+ },
+ "SFINKS (SFS)": {},
+ "SILVAIR-REGS (SVRS)": {
+  "long": true
+ },
+ "SIMFABRIC (SIM)": {},
+ "SKARBIEC (SKH)": {},
+ "SKYLINE (SKL)": {
+  "last_long": "2026-11-26 00:00",
+  "long": false,
+  "tf": "D1"
+ },
+ "SNIEZKA (SKA)": {
+  "long": true
+ },
+ "SNTVERSE (SVE)": {
+  "long": true
+ },
+ "SONEL (SON)": {},
+ "SPYROSOFT (SPR)": {
+  "last_long": "2026-11-26 00:00",
+  "long": false,
+  "tf": "D1"
+ },
+ "STALEXP (STX)": {
+  "long": true
+ },
+ "STALPROD (STP)": {
+  "long": true
+ },
+ "STALPROFI (STF)": {
+  "long": true
+ },
+ "STAPORKOW (ZUK)": {},
+ "SUNEX (SNX)": {
+  "long": true
+ },
+ "SYGNITY (SGN)": {
+  "long": true
+ },
+ "SYN2BIO (S2B)": {},
+ "SYNEKTIK (SNT)": {
+  "long": true
+ },
+ "TALEX (TLX)": {
+  "long": true
+ },
+ "TARCZYNSKI (TAR)": {},
+ "TAURONPE (TPE)": {
+  "long": true
+ },
+ "TESGAS (TSG)": {
+  "long": true
+ },
+ "TEXT (TXT)": {
+  "long": true
+ },
+ "TORPOL (TOR)": {
+  "long": false
+ },
+ "TOYA (TOA)": {
+  "long": true
+ },
+ "TRANSPOL (TRN)": {
+  "long": true
+ },
+ "TSGAMES (TEN)": {
+  "long": true
+ },
+ "ULMA (ULM)": {
+  "long": true
+ },
+ "ULTGAMES (ULG)": {},
+ "UNIBEP (UNI)": {
+  "long": false
+ },
+ "UNIMOT (UNT)": {
+  "long": true
+ },
+ "URTESTE (URT)": {},
+ "VERCOM (VRC)": {
+  "long": true
+ },
+ "VIGOPHOTN (VGO)": {
+  "long": true
+ },
+ "VINDEXUS (VIN)": {
+  "long": true
+ },
+ "VIRTUS (GVT)": {
+  "long": false
+ },
+ "VIVID (VVD)": {
+  "long": true
+ },
+ "VOTUM (VOT)": {
+  "long": true
+ },
+ "VOXEL (VOX)": {
+  "long": true
+ },
+ "VRG (VRG)": {},
+ "WASKO (WAS)": {
+  "long": true
+ },
+ "WAWEL (WWL)": {
+  "long": true
+ },
+ "WIELTON (WLT)": {
+  "long": true
+ },
+ "WIKANA (WIK)": {},
+ "WIRTUALNA (WPL)": {
+  "long": true
+ },
+ "WITTCHEN (WTN)": {
+  "long": true
+ },
+ "WOODPCKR (WPR)": {
+  "long": true
+ },
+ "XPLUS (XPL)": {},
+ "XTB (XTB)": {
+  "long": true
+ },
+ "XTPL (XTP)": {
+  "long": true
+ },
+ "YANOSIK (YAN)": {
+  "long": true
+ },
+ "YARRL (YRL)": {
+  "long": true
+ },
+ "ZABKA (ZAB)": {
+  "long": true
+ },
+ "ZAMET (ZMT)": {
+  "long": true
+ },
+ "ZEPAK (ZEP)": {
+  "long": true
+ },
+ "ZREMB (ZRE)": {
+  "long": true
+ },
+ "ZUE (ZUE)": {
+  "long": false
+ }
+}
