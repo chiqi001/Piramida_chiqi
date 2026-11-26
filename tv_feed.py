@@ -43,17 +43,12 @@ def get_bars(symbol: str, interval_minutes: int, n_bars: int = 300, timeout: flo
     ws = create_connection(WS_URL, header=HEADERS, timeout=timeout)
     try:
         cs = _session("cs_")
-        qs = _session("qs_")
 
         def send(func, params):
             ws.send(_msg(func, params))
 
         send("set_auth_token", ["unauthorized_user_token"])
         send("chart_create_session", [cs, ""])
-        send("quote_create_session", [qs])
-        send("quote_set_fields", [qs, "lp", "ch", "chp", "update_mode"])
-        send("quote_add_symbols", [qs, symbol, {"flags": ["force_permission"]}])
-        send("quote_fast_symbols", [qs, symbol])
         send("resolve_symbol", [cs, "symbol_1",
                                 "=" + json.dumps({"symbol": symbol, "adjustment": "splits"})])
         send("create_series", [cs, "s1", "s1", "symbol_1", str(interval_minutes), n_bars])
