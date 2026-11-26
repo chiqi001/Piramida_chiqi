@@ -259,6 +259,12 @@ def fmt_line(s: dict) -> str:
     return f"{s['name']} | {fmt_price(s['price'])} zł | {t}\n   SMI {smi}"
 
 
+def sort_by_smi(items: list, kind: str) -> list:
+    """LONG: od najmniejszego SMI (najbardziej wyprzedane najpierw); SHORT: od największego."""
+    key = lambda s: s["smi"][BASE_TF]
+    return sorted(items, key=key, reverse=(kind == "SHORT"))
+
+
 def header(kind: str) -> str:
     if kind == "LONG":
         return f"🟢 LONG – SMI < {LONG_LEVEL:g} ({TF_LABEL})"
@@ -353,7 +359,8 @@ def run_live(symbols: list) -> int:
         if not items:
             continue
         try:
-            sent = send_chunks(header(kind), [fmt_line(s) for _, s in items])
+            ordered = sort_by_smi([s for _, s in items], kind)
+            sent = send_chunks(header(kind), [fmt_line(s) for s in ordered])
         except Exception as e:  # noqa: BLE001
             print(f"BŁĄD wysyłki: {e}")
             sent = False
@@ -403,7 +410,7 @@ def run_replay(symbols: list, day_text: str) -> int:
     try:
         for kind, items in events.items():
             if items:
-                items.sort(key=lambda s: s["time"])
+                items = sort_by_smi(items, kind)
                 send_chunks(title_prefix + header(kind) + f" – {len(items)} sygn.",
                             [fmt_line(s) for s in items])
     except Exception as e:  # noqa: BLE001
