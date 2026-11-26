@@ -55,7 +55,7 @@ REARM_MARGIN = env_num("REARM_MARGIN", 5.0)
 TZ = env_str("DISPLAY_TZ", "Europe/Warsaw")
 SESSION_LAST_MINUTE = env_str("SESSION_LAST_MINUTE", "16:59")  # pusty = brak sesji (24h)
 M5_BARS = env_num("M5_BARS", 1500, int)
-WORKERS = env_num("WORKERS", 8, int)
+WORKERS = env_num("WORKERS", 4, int)
 MAX_SIGNAL_AGE_MIN = env_num("MAX_SIGNAL_AGE_MIN", 30, int)
 
 SEND_TEST = env_str("SEND_TEST", "false").lower() == "true"
@@ -78,7 +78,8 @@ def load_symbols() -> list:
                 out.append((name.strip(), tv.strip()) if tv else (item.split(":")[-1], item))
         return out
     with open(SYMBOLS_FILE, encoding="utf-8") as f:
-        return [(r["tv"].split(":")[-1], r["tv"]) for r in csv.DictReader(f, delimiter=";") if r.get("tv")]
+        return [(f'{r["nazwa"]} ({r["tv"].split(":")[-1]})', r["tv"])
+                for r in csv.DictReader(f, delimiter=";") if r.get("tv")]
 
 
 # ---------------------------------------------------------------- wskaźnik
@@ -144,7 +145,7 @@ def drop_open_bar(df: pd.DataFrame, minutes: int) -> pd.DataFrame:
 
 def fetch_m5(tv_symbol: str) -> pd.DataFrame:
     last = None
-    for attempt in range(3):
+    for attempt in range(5):
         try:
             df = tv_feed.get_bars(tv_symbol, 5, n_bars=M5_BARS, timeout=40)
             return df.dropna(subset=["High", "Low", "Close"])
@@ -152,8 +153,10 @@ def fetch_m5(tv_symbol: str) -> pd.DataFrame:
             last = e
             if "symbol_error" in str(e):
                 break
-            time.sleep(2 * (attempt + 1))
-    raise RuntimeError(str(last))
+            # 429 = TradingView ogranicza liczbę połączeń – odczekaj dłużej
+            time.sleep((10 if "429" in str(e) else 2) * (attempt + 1))
+    msg = str(last)
+    raise RuntimeError("429 Too Many Requests" if "429" in msg else msg[:200])
 
 
 def history_table(tv_symbol: str) -> pd.DataFrame:
@@ -219,7 +222,7 @@ def fmt_price(p: float) -> str:
 
 
 def fmt_line(s: dict, with_date: bool = False) -> str:
-    t = s["time"].tz_convert(TZ).strftime("%d.%m %H:%M" if with_date else "%H:%M")
+    t = s["time"].tz_convert(TZ).strftime("%d.%m %H:%M" if with_date else "%H:%M")  # start świecy M5
     return (f"{s['name']} | {fmt_price(s['price'])} zł | {t}\n"
             f"   M5 {s['M5']:.1f} · M30 {s['M30']:.1f} · H1 {s['H1']:.1f}")
 
@@ -276,6 +279,11 @@ def load_all(symbols: list) -> dict:
             else:
                 tables[name] = table
     print(f"Pobrano {len(tables)}/{len(symbols)} spółek w {time.time() - t0:.0f} s")
+    if tables:
+        newest = max(t["t"].iloc[-1] for t in tables.values() if not t.empty)
+        lag = (pd.Timestamp.now(tz="UTC") - newest).total_seconds() / 60
+        print(f"Najnowsza zamknięta świeca M5: {newest.tz_convert(TZ):%Y-%m-%d %H:%M} "
+              f"(opóźnienie danych ok. {lag:.0f} min)")
     for e in errors[:30]:
         print("  BŁĄD", e)
     if len(errors) > 30:
