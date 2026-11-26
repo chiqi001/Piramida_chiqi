@@ -71,6 +71,10 @@ REARM_MARGIN = env_num("REARM_MARGIN", 5.0)
 
 DISPLAY_TZ = env_str("DISPLAY_TZ", "Europe/Warsaw")
 SEND_TEST = env_str("SEND_TEST", "false").lower() == "true"
+# >0: wyślij N ostatnich sygnałów z historii (test), bez zmiany state.json
+REPLAY_LAST = env_num("REPLAY_LAST", 0, int)
+TV_BARS = 300
+TV_BARS_REPLAY = {"M5": 5000, "M30": 1500, "H1": 800}
 STATE_FILE = Path(env_str("STATE_FILE", "state.json"))
 
 # (nazwa, interwał yfinance, ile historii pobrać, długość świecy w minutach)
@@ -127,20 +131,20 @@ def compute_smi(df: pd.DataFrame, length: int, r: int, smooth: int) -> pd.Series
 
 # ---------------------------------------------------------------- dane
 
-def _download(symbol: str, interval: str, period: str, minutes: int) -> pd.DataFrame:
+def _download(symbol: str, interval: str, period: str, minutes: int, n_bars: int = TV_BARS) -> pd.DataFrame:
     if ":" in symbol:  # TradingView
         import tv_feed
-        return tv_feed.get_bars(symbol, minutes, n_bars=300)
+        return tv_feed.get_bars(symbol, minutes, n_bars=n_bars, timeout=40)
     import yfinance as yf  # Yahoo Finance
     return yf.Ticker(symbol).history(period=period, interval=interval, auto_adjust=False, prepost=False)
 
 
-def fetch_closed_bars(symbol: str, interval: str, period: str, minutes: int) -> pd.DataFrame:
+def fetch_closed_bars(symbol: str, interval: str, period: str, minutes: int, n_bars: int = TV_BARS) -> pd.DataFrame:
     last_err = None
     df = None
     for attempt in range(3):
         try:
-            df = _download(symbol, interval, period, minutes)
+            df = _download(symbol, interval, period, minutes, n_bars)
             if df is not None and not df.empty:
                 break
         except Exception as e:  # noqa: BLE001
@@ -209,7 +213,7 @@ def fmt_price(p: float) -> str:
     return f"{p:.3f}" if p >= 10 else f"{p:.5f}"
 
 
-def build_message(kind: str, symbol: str, readings: dict) -> str:
+def build_message(kind: str, symbol: str, readings: dict, prefix: str = "") -> str:
     if kind == "LONG":
         head = f"🟢 LONG | {symbol}"
         cond = f"SMI < {LONG_LEVEL:g} na M5, M30 i H1"
@@ -222,7 +226,7 @@ def build_message(kind: str, symbol: str, readings: dict) -> str:
 
     smi_line = " | ".join(f"{tf}: {r['smi']:.2f}" for tf, r in readings.items())
     m5 = readings["M5"]
-    return (
+    return prefix + (
         f"{head}\n{cond}\n{smi_line}\n"
         f"Cena: {fmt_price(m5['close'])}\n"
         f"Świeca M5: {fmt_time(m5['time'])} ({DISPLAY_TZ})"
@@ -272,7 +276,65 @@ def process_symbol(symbol: str, readings: dict, st: dict) -> None:
     st.setdefault("short_armed", True)
 
 
+def history_table(ticker: str) -> pd.DataFrame:
+    """Dla każdej zamkniętej świecy M5: SMI z M5 oraz ostatnich zamkniętych świec M30 i H1."""
+    base = None
+    for name, interval, period, minutes in TIMEFRAMES:
+        df = fetch_closed_bars(ticker, interval, period, minutes, TV_BARS_REPLAY[name])
+        smi = compute_smi(df, SMI_LENGTH, SMI_R, SMI_SMOOTH)
+        part = pd.DataFrame({name: smi, f"{name}_close": df["Close"], f"{name}_open": df.index})
+        part.index = part.index + pd.Timedelta(minutes=minutes)  # czas zamknięcia świecy
+        part = part.dropna().reset_index(names="t").sort_values("t")
+        part["t"] = part["t"].astype("datetime64[ns, UTC]")
+        base = part if base is None else pd.merge_asof(base, part, on="t", direction="backward")
+    return base.dropna()
+
+
+def history_events(symbol: str, table: pd.DataFrame) -> list:
+    events, long_armed, short_armed = [], True, True
+    for row in table.itertuples(index=False):
+        smis = [row.M5, row.M30, row.H1]
+        readings = {tf: {"smi": getattr(row, tf), "time": getattr(row, f"{tf}_open"),
+                         "close": getattr(row, f"{tf}_close")} for tf in ("M5", "M30", "H1")}
+        if all(x < LONG_LEVEL for x in smis) and long_armed:
+            events.append((row.t, symbol, "LONG", readings)); long_armed = False
+        elif not long_armed and any(x > LONG_LEVEL + REARM_MARGIN for x in smis):
+            long_armed = True
+        if all(x > SHORT_LEVEL for x in smis) and short_armed:
+            events.append((row.t, symbol, "SHORT", readings)); short_armed = False
+        elif not short_armed and any(x < SHORT_LEVEL - REARM_MARGIN for x in smis):
+            short_armed = True
+    return events
+
+
+def replay(n: int) -> int:
+    events, since = [], None
+    for symbol, ticker in SYMBOLS:
+        try:
+            table = history_table(ticker)
+        except Exception as e:  # noqa: BLE001
+            print(f"[{symbol}] BŁĄD danych: {e}")
+            continue
+        start = table["t"].iloc[0]
+        since = start if since is None else max(since, start)
+        ev = history_events(symbol, table)
+        print(f"[{symbol}] historia od {fmt_time(start)}: {len(ev)} sygnałów")
+        events += ev
+    events.sort(key=lambda e: e[0])
+    last = events[-n:]
+    print(f"Razem {len(events)} sygnałów, wysyłam {len(last)} ostatnich")
+    if not last:
+        send_telegram(f"📜 TEST HISTORII: brak sygnałów od {fmt_time(since)} ({DISPLAY_TZ})" if since is not None
+                      else "📜 TEST HISTORII: brak danych")
+    for i, (_, symbol, kind, readings) in enumerate(last, 1):
+        send_telegram(build_message(kind, symbol, readings,
+                                    prefix=f"📜 SYGNAŁ HISTORYCZNY {i}/{len(last)} (test, nie aktualny)\n"))
+    return 0
+
+
 def main() -> int:
+    if REPLAY_LAST > 0:
+        return replay(REPLAY_LAST)
     state = load_state()
     before = json.dumps(state, sort_keys=True)
     errors = 0

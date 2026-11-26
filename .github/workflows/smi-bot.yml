@@ -13,6 +13,10 @@ on:
         description: "Wyślij wiadomość testową z aktualnymi wartościami SMI"
         type: boolean
         default: false
+      replay:
+        description: "Wyślij N ostatnich sygnałów z historii (np. 3); puste = nie"
+        type: string
+        default: ""
 
 permissions:
   contents: write   # zapis state.json i commit keepalive
@@ -25,7 +29,7 @@ concurrency:
 jobs:
   run:
     runs-on: ubuntu-latest   # standardowy runner = darmowy w repo publicznym
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -49,6 +53,7 @@ jobs:
           SMI_R: ${{ vars.SMI_R }}
           SMI_SMOOTH: ${{ vars.SMI_SMOOTH }}
           SEND_TEST: ${{ inputs.test }}
+          REPLAY_LAST: ${{ inputs.replay }}
         run: python smi_bot.py
 
       - name: Save state + keepalive
