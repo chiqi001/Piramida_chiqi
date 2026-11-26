@@ -1,20 +1,20 @@
 name: SMI Telegram Bot
 
-# Repozytorium MUSI być publiczne – wtedy GitHub Actions jest darmowy bez limitu minut.
-# Sekrety (TELEGRAM_TOKEN, TELEGRAM_CHAT_ID) pozostają ukryte także w repo publicznym.
+# Spółki z WIG (GPW). Repozytorium publiczne = GitHub Actions za darmo, bez limitu minut.
+# Sekrety: TELEGRAM_TOKEN, TELEGRAM_CHAT_ID.
 
 on:
   schedule:
-    # co 5 minut, przesunięte o 1 min od pełnej godziny (mniejsze opóźnienia GitHuba)
-    - cron: "1-59/5 * * * *"
+    # co 5 minut, pon–pt, 7:00–16:59 UTC (pokrywa sesję GPW 9:00–17:00 czasu PL zimą i latem)
+    - cron: "1-59/5 7-16 * * 1-5"
   workflow_dispatch:
     inputs:
       test:
-        description: "Wyślij wiadomość testową z aktualnymi wartościami SMI"
+        description: "Wyślij krótką wiadomość testową"
         type: boolean
         default: false
-      replay:
-        description: "Wyślij N ostatnich sygnałów z historii (np. 3); puste = nie"
+      replay_day:
+        description: "Wyślij sygnały z dnia: RRRR-MM-DD albo 'wczoraj' (puste = normalna praca)"
         type: string
         default: ""
 
@@ -28,8 +28,8 @@ concurrency:
 
 jobs:
   run:
-    runs-on: ubuntu-latest   # standardowy runner = darmowy w repo publicznym
-    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -47,13 +47,11 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           SYMBOLS: ${{ vars.SYMBOLS }}
           LONG_LEVEL: ${{ vars.LONG_LEVEL }}
+          SHORT_ENABLED: ${{ vars.SHORT_ENABLED }}
           SHORT_LEVEL: ${{ vars.SHORT_LEVEL }}
           REARM_MARGIN: ${{ vars.REARM_MARGIN }}
-          SMI_LENGTH: ${{ vars.SMI_LENGTH }}
-          SMI_R: ${{ vars.SMI_R }}
-          SMI_SMOOTH: ${{ vars.SMI_SMOOTH }}
           SEND_TEST: ${{ inputs.test }}
-          REPLAY_LAST: ${{ inputs.replay }}
+          REPLAY_DAY: ${{ inputs.replay_day }}
         run: python smi_bot.py
 
       - name: Save state + keepalive
@@ -73,7 +71,6 @@ jobs:
           fi
 
           # 2) keepalive: GitHub wyłącza harmonogram po 60 dniach bez aktywności.
-          #    Jeśli ostatni commit jest starszy niż 40 dni – pusty commit + ponowne włączenie workflow.
           days=$(( ($(date +%s) - $(git log -1 --format=%ct)) / 86400 ))
           if [ "$days" -ge 40 ]; then
             git commit --allow-empty -m "keepalive [skip ci]"
@@ -82,6 +79,8 @@ jobs:
           fi
 
           if [ "$changed" = true ]; then
-            git pull --rebase --quiet || true
-            git push
+            for i in 1 2 3; do
+              git pull --rebase --quiet && git push && break
+              sleep 3
+            done
           fi
