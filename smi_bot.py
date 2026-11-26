@@ -326,10 +326,17 @@ def replay(n: int) -> int:
     if not last:
         send_telegram(f"📜 TEST HISTORII: brak sygnałów od {fmt_time(since)} ({DISPLAY_TZ})" if since is not None
                       else "📜 TEST HISTORII: brak danych")
+    failed = 0
     for i, (_, symbol, kind, readings) in enumerate(last, 1):
-        send_telegram(build_message(kind, symbol, readings,
-                                    prefix=f"📜 SYGNAŁ HISTORYCZNY {i}/{len(last)} (test, nie aktualny)\n"))
-    return 0
+        msg = build_message(kind, symbol, readings,
+                            prefix=f"📜 SYGNAŁ HISTORYCZNY {i}/{len(last)} (test, nie aktualny)\n")
+        print("-" * 40 + "\n" + msg)
+        try:
+            send_telegram(msg)
+        except Exception as e:  # noqa: BLE001
+            failed += 1
+            print(f"BŁĄD wysyłki: {e}")
+    return 1 if failed else 0
 
 
 def main() -> int:
