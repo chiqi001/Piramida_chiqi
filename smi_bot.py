@@ -165,12 +165,12 @@ def fetch_closed_bars(symbol: str, interval: str, period: str, minutes: int) -> 
 
 # ---------------------------------------------------------------- telegram
 
-def send_telegram(text: str) -> None:
+def send_telegram(text: str) -> bool:
     token = os.getenv("TELEGRAM_TOKEN", "").strip()
     chat_ids = [c.strip() for c in os.getenv("TELEGRAM_CHAT_ID", "").split(",") if c.strip()]
     if not token or not chat_ids:
         print("[DRY RUN – brak TELEGRAM_TOKEN / TELEGRAM_CHAT_ID]\n" + text)
-        return
+        return False
     for chat_id in chat_ids:
         resp = requests.post(
             f"https://api.telegram.org/bot{token}/sendMessage",
@@ -179,6 +179,7 @@ def send_telegram(text: str) -> None:
         )
         if resp.status_code != 200:
             raise RuntimeError(f"Telegram {resp.status_code}: {resp.text[:200]}")
+    return True
 
 
 # ---------------------------------------------------------------- stan
@@ -251,19 +252,19 @@ def process_symbol(symbol: str, readings: dict, st: dict) -> None:
 
     # LONG
     if long_now and st.get("long_armed", True):
-        send_telegram(build_message("LONG", symbol, readings))
-        st["long_armed"] = False
-        st["last_long"] = stamp
-        print(f"[{symbol}] >>> wysłano LONG")
+        if send_telegram(build_message("LONG", symbol, readings)):
+            st["long_armed"] = False
+            st["last_long"] = stamp
+            print(f"[{symbol}] >>> wysłano LONG")
     elif not st.get("long_armed", True) and any(x > LONG_LEVEL + REARM_MARGIN for x in smis):
         st["long_armed"] = True
 
     # SHORT
     if short_now and st.get("short_armed", True):
-        send_telegram(build_message("SHORT", symbol, readings))
-        st["short_armed"] = False
-        st["last_short"] = stamp
-        print(f"[{symbol}] >>> wysłano SHORT")
+        if send_telegram(build_message("SHORT", symbol, readings)):
+            st["short_armed"] = False
+            st["last_short"] = stamp
+            print(f"[{symbol}] >>> wysłano SHORT")
     elif not st.get("short_armed", True) and any(x < SHORT_LEVEL - REARM_MARGIN for x in smis):
         st["short_armed"] = True
 
