@@ -1,0 +1,82 @@
+name: SMI Telegram Bot
+
+# Repozytorium MUSI być publiczne – wtedy GitHub Actions jest darmowy bez limitu minut.
+# Sekrety (TELEGRAM_TOKEN, TELEGRAM_CHAT_ID) pozostają ukryte także w repo publicznym.
+
+on:
+  schedule:
+    # co 5 minut, przesunięte o 1 min od pełnej godziny (mniejsze opóźnienia GitHuba)
+    - cron: "1-59/5 * * * *"
+  workflow_dispatch:
+    inputs:
+      test:
+        description: "Wyślij wiadomość testową z aktualnymi wartościami SMI"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write   # zapis state.json i commit keepalive
+  actions: write    # ponowne włączenie workflow (keepalive)
+
+concurrency:
+  group: smi-bot
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest   # standardowy runner = darmowy w repo publicznym
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run bot
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          SYMBOLS: ${{ vars.SYMBOLS }}
+          LONG_LEVEL: ${{ vars.LONG_LEVEL }}
+          SHORT_LEVEL: ${{ vars.SHORT_LEVEL }}
+          REARM_MARGIN: ${{ vars.REARM_MARGIN }}
+          SMI_LENGTH: ${{ vars.SMI_LENGTH }}
+          SMI_R: ${{ vars.SMI_R }}
+          SMI_SMOOTH: ${{ vars.SMI_SMOOTH }}
+          SEND_TEST: ${{ inputs.test }}
+        run: python smi_bot.py
+
+      - name: Save state + keepalive
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          changed=false
+
+          # 1) zapis stanu sygnałów
+          if [ -n "$(git status --porcelain state.json)" ]; then
+            git add state.json
+            git commit -m "Update bot state [skip ci]"
+            changed=true
+          fi
+
+          # 2) keepalive: GitHub wyłącza harmonogram po 60 dniach bez aktywności.
+          #    Jeśli ostatni commit jest starszy niż 40 dni – pusty commit + ponowne włączenie workflow.
+          days=$(( ($(date +%s) - $(git log -1 --format=%ct)) / 86400 ))
+          if [ "$days" -ge 40 ]; then
+            git commit --allow-empty -m "keepalive [skip ci]"
+            changed=true
+            gh api -X PUT "repos/${{ github.repository }}/actions/workflows/smi-bot.yml/enable" || true
+          fi
+
+          if [ "$changed" = true ]; then
+            git pull --rebase --quiet || true
+            git push
+          fi
